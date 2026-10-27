@@ -17,6 +17,10 @@ jobs:
           const fs = require('fs');
           const { extractTicketId } = require('./.github/scripts/lib.js');
           const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+          if (!event.pull_request) {
+            console.log('Not a pull request event, skipping check');
+            process.exit(0);
+          }
           const branch = event.pull_request.head.ref;
           const title = event.pull_request.title;
           const body = event.pull_request.body || '';
