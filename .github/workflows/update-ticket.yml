@@ -1,0 +1,26 @@
+name: Update Azure Board Ticket
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, closed]
+permissions:
+  contents: read
+concurrency:
+  group: ticket-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Sync ticket
+        run: node .github/scripts/update-ticket.js
+        env:
+          AZURE_ORG: ${{ vars.AZURE_ORG }}
+          AZURE_PROJECT: ${{ vars.AZURE_PROJECT }}
+          AZURE_BASE_URL: ${{ vars.AZURE_BASE_URL }}
+          STATE_OPEN: ${{ vars.STATE_OPEN || 'Active' }}
+          STATE_MERGED: ${{ vars.STATE_MERGED || 'Closed' }}
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}

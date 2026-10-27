@@ -1,0 +1,29 @@
+name: PR Checks
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+permissions:
+  contents: read
+jobs:
+  require-ticket-id:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check for ticket ID
+        run: node -e "
+          const fs = require('fs');
+          const { extractTicketId } = require('./.github/scripts/lib.js');
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+          const branch = event.pull_request.head.ref;
+          const title = event.pull_request.title;
+          const body = event.pull_request.body || '';
+          const ticketId = extractTicketId(branch, title, body);
+          if (!ticketId) {
+            console.error('PR must reference a ticket like AB#123 in the branch, title, or body');
+            process.exit(1);
+          }
+          console.log('Ticket ID found:', ticketId);
+        "
